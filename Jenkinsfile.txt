@@ -12,7 +12,7 @@ pipeline {
 	stages {
 		stage('get info project') {
 			agent {
-                label "192.1681.89.99"
+                label "lab-server"
             }
             steps {
                 script {
@@ -33,7 +33,7 @@ pipeline {
 		}
         stage('build') {
             agent {
-                label '192.168.189.99'
+                label 'lab-server'
             }
             steps {
                 script {
@@ -43,7 +43,7 @@ pipeline {
         }
         stage('trivy scan image') {
             agent {
-                label '192.168.189.99'
+                label 'lab-server'
             }
             steps {
                 script {
@@ -54,7 +54,7 @@ pipeline {
         }
         stage('deploy') {
             agent {
-                label '192.168.189.99'
+                label 'lab-server'
             }
             steps {
                 script {
