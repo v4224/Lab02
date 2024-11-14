@@ -1,0 +1,66 @@
+pipeline {
+	agent none
+	enviroment {
+		git rev-parse --short HEAD = ""
+		git describe --tags --exact-match || echo 'no-tag' = ""
+		env.PROJECT_NAME = ""
+		IMAGE_VERSION = ""
+        USER_PROJECT = ""
+        TRIVY_IMAGE_REPORT = ""
+        CURRENT_DIR = ""
+	}
+	stages {
+		stage('get info project') {
+			agent {
+                label "192.1681.89.99"
+            }
+            steps {
+                script {
+                    env.PROJECT_NAME = sh(script: "git ls-remote https://github.com/v4224/Lab02.git -n | grep Fetch | cut -d'/' -f5 | cut -d'.' -f1", returnStdout: true).trim()
+
+                    def CI_COMMIT_HASH = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+                    git rev-parse --short HEAD = CI_COMMIT_HASH.take(8)
+
+                    git describe --tags --exact-match || echo 'no-tag' = sh(script: "git describe --tags --exact-match ${CI_COMMIT_HASH}", returnStdout: true).trim()
+
+                    IMAGE_VERSION = "${CI_PROJECT-NAME}:${git rev-parse --short HEAD}_${git describe --tags --exact-match || echo 'no-tag'}"
+
+                    TRIVY_IMAGE_REPORT = "security_scan_image_${env.PROJECT_NAME}_${CI_COMMIT TAG}_${git rev-parse --short HEAD}_report"
+
+                    CURRENT_DIR = sh(script: 'pwd', returnStdout: true).trim()
+                }
+            }
+		}
+        stage('build') {
+            agent {
+                label '192.168.189.99'
+            }
+            steps {
+                script {
+                    sh(script: """ docker build -t $IMAGE_VERSION . """, label: "")
+                }
+            }
+        }
+        stage('trivy scan image') {
+            agent {
+                label '192.168.189.99'
+            }
+            steps {
+                script {
+                    sh(script: """docker run --rm -v ${CURRENT_DIR}:/workspace -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --reset""", label: "")
+                    sh(script: """docker run --rm -v ${CURRENT_DIR}:/workspace -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --format template --template "@contrib/html.tpl" --output /workspave/${TRIVY_IMAGE_REPORT}.html ${IMAGE_VERSION}""", label: "")
+                }
+            }
+        }
+        stage('deploy') {
+            agent {
+                label '192.168.189.99'
+            }
+            steps {
+                script {
+                    sh(script: """ sudo su ${USER_PROJECT} -c "docker rm -f $env.PROJECT_NAME; docker run --name $env.PROJECT_NAME -DP 5214:5214 $IMAGE_VERSION" """, label: "")
+                }
+            }
+        }
+	}
+}
