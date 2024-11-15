@@ -7,7 +7,6 @@ COPY backend/backend.csproj ./backend/
 WORKDIR /app/backend
 RUN dotnet restore
 
-WORKDIR /app
-COPY /app/backend .
+COPY . .
 RUN dotnet restore
 CMD ["dotnet", "run", "--urls", "http://0.0.0.0:5214"]
