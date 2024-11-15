@@ -12,6 +12,7 @@ RUN rm -rf /app/backend/obj /app/backend/bin
 
 # Sao chép toàn bộ mã nguồn và build ứng dụng
 COPY . .
+RUN rm -rf /app/backend/obj /app/backend/bin # Xóa lại các file tạm trước khi publish
 RUN dotnet publish -c Release -o out
 
 # Stage 2: Run
