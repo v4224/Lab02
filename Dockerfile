@@ -6,17 +6,5 @@ WORKDIR /app
 COPY backend/backend.csproj ./backend/
 WORKDIR /app/backend
 RUN dotnet restore
-
-# Xóa thư mục tạm để tránh xung đột
-RUN rm -rf /app/backend/obj /app/backend/bin
-
-# Sao chép toàn bộ mã nguồn và build ứng dụng
 COPY . .
-RUN rm -rf /app/backend/obj /app/backend/bin # Xóa lại các file tạm trước khi publish
-RUN dotnet publish -c Release -o out
-
-# Stage 2: Run
-FROM mcr.microsoft.com/dotnet/aspnet:6.0
-WORKDIR /app
-COPY --from=build /app/backend/out .
-ENTRYPOINT ["dotnet", "backend.dll"]
+CMD ["dotnet", "run", "--urls", "http://0.0.0.0:5214"]
